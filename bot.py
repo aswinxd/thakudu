@@ -55,16 +55,20 @@ files = glob.glob(ppath)
 async def start():
     print('\n')
     print('Initializing Tech VJ Bot')
-  #  await StreamBot.start() 
+
+    # await StreamBot.start() 
+
     if StreamBot.is_connected:
-      me = await StreamBot.get_me()
+        try:
+            me = await StreamBot.get_me()
+            logging.info(f"Connected as {me.first_name} (@{me.username})")
+        except ConnectionError:
+            logging.warning("StreamBot is not connected. Skipping get_me().")
     else:
         logging.warning("StreamBot is not connected. Skipping get_me().")
- 
 
-   # StreamBot.username = bot_info.username
     await initialize_clients()
-    
+
     for name in files:
         with open(name) as a:
             patt = Path(a.name)
@@ -76,25 +80,25 @@ async def start():
             spec.loader.exec_module(load)
             sys.modules["plugins." + plugin_name] = load
             print("Imported => " + plugin_name)
-            
+
     if ON_HEROKU:
         asyncio.create_task(ping_server())
-        
-    me = await StreamBot.get_me()
-    tz = pytz.timezone('Asia/Kolkata')
-    today = date.today()
-    now = datetime.now(tz)
-    time = now.strftime("%H:%M:%S %p")
-    
-    app = web.AppRunner(await web_server())
-    await StreamBot.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(today, time))
-    await app.setup()
-    bind_address = "0.0.0.0"
-    await web.TCPSite(app, bind_address, PORT).start()
-    
-    if CLONE_MODE == True:
+
+    if StreamBot.is_connected:
+        tz = pytz.timezone('Asia/Kolkata')
+        today = date.today()
+        now = datetime.now(tz)
+        time = now.strftime("%H:%M:%S %p")
+
+        app = web.AppRunner(await web_server())
+        await StreamBot.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(today, time))
+        await app.setup()
+        bind_address = "0.0.0.0"
+        await web.TCPSite(app, bind_address, PORT).start()
+
+    if CLONE_MODE:
         await restart_bots()
-        
+
     print("Bot Started powered by andi")
     await idle()
 
