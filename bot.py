@@ -1,5 +1,3 @@
-
-
 import sys
 import glob
 import importlib
@@ -7,6 +5,18 @@ from pathlib import Path
 from pyrogram import idle
 import logging
 import logging.config
+import asyncio
+from datetime import date, datetime
+import pytz
+from aiohttp import web
+
+from config import LOG_CHANNEL, ON_HEROKU, CLONE_MODE, PORT
+from Script import script
+from plugins.clone import restart_bots
+from TechVJ.server import web_server
+from TechVJ.bot import StreamBot
+from TechVJ.utils.keepalive import ping_server
+from TechVJ.bot.clients import initialize_clients
 
 
 
@@ -15,53 +25,20 @@ logging.getLogger().setLevel(logging.INFO)
 logging.getLogger("pyrogram").setLevel(logging.ERROR)
 
 
-
-
-from pyrogram import Client, __version__
-from pyrogram.raw.all import layer
-from config import LOG_CHANNEL, ON_HEROKU, CLONE_MODE, PORT
-from typing import Union, Optional, AsyncGenerator
-from pyrogram import types
-from Script import script 
-from datetime import date, datetime 
-import pytz
-from aiohttp import web
-from TechVJ.server import web_server
-
-
-
-import asyncio
-from pyrogram import idle
-from plugins.clone import restart_bots
-from TechVJ.bot import StreamBot
-from TechVJ.utils.keepalive import ping_server
-from TechVJ.bot.clients import initialize_clients
-
-
-
-
 ppath = "plugins/*.py"
 files = glob.glob(ppath)
 
 
-
-
-
-
 async def start():
-    print('\n')
-    print('Initializing Tech VJ Bot')
+    print('\nInitializing Tech VJ Bot')
 
-    await StreamBot.start() 
-
-    if StreamBot.is_connected:
-        try:
-            me = await StreamBot.get_me()
-            logging.info(f"Connected as {me.first_name} (@{me.username})")
-        except ConnectionError:
-            logging.warning("StreamBot is not connected. Skipping get_me().")
-    else:
-        logging.warning("StreamBot is not connected. Skipping get_me().")
+    try:
+        await StreamBot.start()
+        me = await StreamBot.get_me()
+        logging.info(f"Connected as {me.first_name} (@{me.username})")
+    except Exception as e:
+        logging.error(f"Failed to start StreamBot: {e}")
+        return
 
     await initialize_clients()
 
@@ -70,27 +47,26 @@ async def start():
             patt = Path(a.name)
             plugin_name = patt.stem.replace(".py", "")
             plugins_dir = Path(f"plugins/{plugin_name}.py")
-            import_path = "plugins.{}".format(plugin_name)
+            import_path = f"plugins.{plugin_name}"
             spec = importlib.util.spec_from_file_location(import_path, plugins_dir)
             load = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(load)
             sys.modules["plugins." + plugin_name] = load
-            print("Imported => " + plugin_name)
+            print(f"Imported => {plugin_name}")
 
     if ON_HEROKU:
         asyncio.create_task(ping_server())
 
-    if StreamBot.is_connected:
-        tz = pytz.timezone('Asia/Kolkata')
-        today = date.today()
-        now = datetime.now(tz)
-        time = now.strftime("%H:%M:%S %p")
+    tz = pytz.timezone('Asia/Kolkata')
+    today = date.today()
+    now = datetime.now(tz)
+    time = now.strftime("%H:%M:%S %p")
 
-        app = web.AppRunner(await web_server())
-        await StreamBot.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(today, time))
-        await app.setup()
-        bind_address = "0.0.0.0"
-        await web.TCPSite(app, bind_address, PORT).start()
+    app = web.AppRunner(await web_server())
+    await StreamBot.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(today, time))
+    await app.setup()
+    bind_address = "0.0.0.0"
+    await web.TCPSite(app, bind_address, PORT).start()
 
     if CLONE_MODE:
         await restart_bots()
@@ -98,12 +74,16 @@ async def start():
     print("Bot Started powered by andi")
     await idle()
 
-if __name__ == '__main__':
-    import asyncio
 
+if __name__ == '__main__':
     try:
-        asyncio.run(start())
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(start())
     except KeyboardInterrupt:
         logging.info('Service Stopped Bye 👋')
+    except Exception as e:
+        logging.error(f"Unhandled exception: {e}")
+
+
 
 
