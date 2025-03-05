@@ -1,6 +1,3 @@
-# Don't Remove Credit @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot @Tech_VJ
-# Ask Doubt on telegram @KingVJ01
 
 
 import sys
@@ -13,7 +10,6 @@ import logging.config
 
 
 
-# Get logging configurations
 logging.config.fileConfig('logging.conf')
 logging.getLogger().setLevel(logging.INFO)
 logging.getLogger("pyrogram").setLevel(logging.ERROR)
@@ -56,7 +52,7 @@ async def start():
     print('\n')
     print('Initializing Tech VJ Bot')
 
-    # await StreamBot.start() 
+    await StreamBot.start() 
 
     if StreamBot.is_connected:
         try:
