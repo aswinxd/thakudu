@@ -46,18 +46,21 @@ from TechVJ.bot.clients import initialize_clients
 
 ppath = "plugins/*.py"
 files = glob.glob(ppath)
-StreamBot.start()
-loop = asyncio.get_event_loop()
+
+
 
 
 
 
 async def start():
     print('\n')
-    print('Initalizing Tech VJ Bot')
+    print('Initializing Tech VJ Bot')
+    await StreamBot.start() 
+
     bot_info = await StreamBot.get_me()
     StreamBot.username = bot_info.username
     await initialize_clients()
+    
     for name in files:
         with open(name) as a:
             patt = Path(a.name)
@@ -68,28 +71,32 @@ async def start():
             load = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(load)
             sys.modules["plugins." + plugin_name] = load
-            print("Tech VJ Imported => " + plugin_name)
+            print("Imported => " + plugin_name)
+            
     if ON_HEROKU:
         asyncio.create_task(ping_server())
+        
     me = await StreamBot.get_me()
     tz = pytz.timezone('Asia/Kolkata')
     today = date.today()
     now = datetime.now(tz)
     time = now.strftime("%H:%M:%S %p")
+    
     app = web.AppRunner(await web_server())
     await StreamBot.send_message(chat_id=LOG_CHANNEL, text=script.RESTART_TXT.format(today, time))
     await app.setup()
     bind_address = "0.0.0.0"
     await web.TCPSite(app, bind_address, PORT).start()
+    
     if CLONE_MODE == True:
         await restart_bots()
-    print("Bot Started Powered By @VJ_Botz")
+        
+    print("Bot Started powered by andi")
     await idle()
-
-
 
 if __name__ == '__main__':
     asyncio.run(start())
+
 
 
 
