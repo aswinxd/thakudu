@@ -89,10 +89,8 @@ async def start():
 
 
 if __name__ == '__main__':
-    try:
-        asyncio.run(start())
-    except KeyboardInterrupt:
-        logging.info('Se👋')
+    asyncio.run(start())
+
 
 
 
