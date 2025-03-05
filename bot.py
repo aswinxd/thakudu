@@ -55,10 +55,10 @@ files = glob.glob(ppath)
 async def start():
     print('\n')
     print('Initializing Tech VJ Bot')
-    await StreamBot.start() 
+  #  await StreamBot.start() 
 
-    bot_info = await StreamBot.get_me()
-    StreamBot.username = bot_info.username
+  #  bot_info = await StreamBot.get_me()
+   # StreamBot.username = bot_info.username
     await initialize_clients()
     
     for name in files:
@@ -95,15 +95,11 @@ async def start():
     await idle()
 
 if __name__ == '__main__':
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    import asyncio
 
     try:
-        loop.run_until_complete(start())
+        asyncio.run(start())
     except KeyboardInterrupt:
         logging.info('Service Stopped Bye 👋')
-    finally:
-        loop.close()
-
 
 
