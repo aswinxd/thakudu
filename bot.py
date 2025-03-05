@@ -95,10 +95,13 @@ async def start():
     await idle()
 
 if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
     try:
-        asyncio.run(start())
+        loop.run_until_complete(start())
     except KeyboardInterrupt:
         logging.info('Service Stopped Bye 👋')
+    finally:
+        loop.close()
 
 
 
