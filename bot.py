@@ -57,7 +57,10 @@ async def start():
     print('Initializing Tech VJ Bot')
   #  await StreamBot.start() 
     if StreamBot.is_connected:
-        me = await StreamBot.get_me()
+      me = await StreamBot.get_me()
+    else:
+        logging.warning("StreamBot is not connected. Skipping get_me().")
+ 
 
    # StreamBot.username = bot_info.username
     await initialize_clients()
